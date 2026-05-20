@@ -1,0 +1,28 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Caches de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Archivos generados por Java
+*.class
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos temporales de editores
+.vscode/
+.idea/
+
+# Logs generados en ejecucion
+logs/errores.log
+logs/errores_streamlit.log
+streamlit.out.log
+streamlit.err.log
