@@ -125,7 +125,7 @@ Evidencia actual:
 
 La demo aplica separacion modular entre ingesta, calculo cinematico, reglas de alerta y ejecucion por consola. La validacion temprana de entradas evita que datos corruptos avancen al calculo, mientras que la tolerancia a errores permite continuar la ejecucion aunque existan filas invalidas. Los logs entregan evidencia de auditoria sobre descartes y exclusiones. Las pruebas unitarias automatizadas verifican casos normales, bordes y errores, y la matriz resume la trazabilidad requisito-diseno-codigo-prueba.
 
-## 5. Plan de Demo y Evidencia de Ejecución
+## Plan de Demo y Evidencia de Ejecución
 
 La demo se realizara mediante una interfaz de consola estilizada, cargando datos desde un archivo CSV y mostrando alertas VERDE, AMARILLO y ROJO. Esta decision permite evidenciar de forma simple y verificable la ingesta de datos desde CSV, validacion de entradas, aplicacion de la regla RN-05, calculo cinematico, motor de alertas, manejo de errores, generacion de logs, ejecucion de pruebas unitarias y trazabilidad entre requisitos, diseno, codigo y pruebas.
 
