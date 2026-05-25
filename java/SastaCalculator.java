@@ -22,7 +22,8 @@ public class SastaCalculator {
         List<Aeronave> aeronaves = new ArrayList<>();
 
         try (BufferedReader lector = Files.newBufferedReader(rutaCsv)) {
-            String linea = lector.readLine();
+            lector.readLine();
+            String linea;
 
             while ((linea = lector.readLine()) != null) {
                 String[] campos = linea.split(",", -1);
@@ -48,7 +49,6 @@ public class SastaCalculator {
                     if (aeronave.altZ < 100) {
                         continue;
                     }
-
                     aeronaves.add(aeronave);
                 } catch (NumberFormatException error) {
                     // Filas corruptas se ignoran para mantener la ejecucion completa.
