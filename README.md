@@ -73,7 +73,7 @@ streamlit run app_streamlit.py
 ## Ejecucion de pruebas
 
 ```powershell
-pytest
+python -m pytest -v
 ```
 
 ## Validación cruzada Java/Python
@@ -131,6 +131,31 @@ Además se incorporaron **pruebas de integración** que ejercitan el sistema de 
 
 **GitHub Actions** ejecuta estas pruebas automatizadas en cada `push`/`pull_request` a `main` (incluida la generación del dataset de estrés antes de `pytest`). Esto responde al enfoque de **pruebas automatizadas y CI/CD** visto en clase: cada cambio queda verificado de forma reproducible antes de integrarse, reduciendo el riesgo de regresiones.
 
+## Flujo recomendado de verificación QA
+
+Secuencia completa para verificar el proyecto de punta a punta en un entorno local (la misma lógica que ejecuta GitHub Actions). Requiere Python 3.12+ y Java 17 (ver "Requisito de Java"):
+
+```powershell
+pip install -r requirements.txt
+python scripts/generar_dataset_estres.py
+python -m pytest -v
+python src/main.py
+python src/exportar_resultados_python.py
+javac java/SastaCalculator.java
+java -cp java SastaCalculator
+python src/validador_consistencia_modulo.py
+python -m py_compile app_streamlit.py
+streamlit run app_streamlit.py
+```
+
+Resultado esperado:
+
+- Dataset de estrés `data/aeronaves_stress_la_serena_200.csv` generado (200 aeronaves válidas).
+- `pytest`: 10 pruebas aprobadas (unitarias, integración y estrés).
+- Demo por consola: 4 aeronaves válidas, 3 registros descartados, 6 pares evaluados, V01-V02 en ROJO y V05-V06 en VERDE.
+- Validación cruzada Java/Python: todos los pares en estado OK con diferencias `<= 0.01`.
+- `py_compile` del dashboard sin errores y Streamlit levantando correctamente.
+
 ## Casos de prueba implementados
 
 - UT-NORM-01: convergencia frontal inminente => ROJO.
@@ -172,7 +197,7 @@ La demo se realizara mediante una interfaz de consola estilizada, cargando datos
 | 3 | Ejecutar `python src/main.py` | Salida por consola con aeronaves validas, registros descartados y pares evaluados |
 | 4 | Observar alertas | `V01-V02` genera ROJO; `V05-V06` genera VERDE |
 | 5 | Mostrar logs de errores | `V15` descartada por altitud negativa, `V16` por velocidad corrupta y `V17` por RN-05 |
-| 6 | Ejecutar `pytest` | 7 pruebas unitarias aprobadas |
+| 6 | Ejecutar `python -m pytest -v` | 10 pruebas aprobadas (unitarias, integracion y estres) |
 | 7 | Mostrar matriz de trazabilidad | Relacion entre requisito, modulo, funcion implementada, caso de prueba y resultado esperado |
 | 8 | Justificar decisiones de calidad | Separacion modular, validacion temprana, tolerancia a errores, logs y pruebas automatizadas |
 
@@ -180,7 +205,8 @@ La demo se realizara mediante una interfaz de consola estilizada, cargando datos
 
 - `python src/main.py` ejecutado correctamente.
 - Resultado principal: 4 aeronaves validas, 3 registros descartados y 6 pares evaluados.
-- `pytest` ejecutado correctamente.
-- Resultado: 7 pruebas unitarias aprobadas.
+- `python -m pytest -v` ejecutado correctamente.
+- Resultado: 10 pruebas aprobadas (unitarias, integracion y estres).
+- Dataset de estres `data/aeronaves_stress_la_serena_200.csv` generado con 200 aeronaves validas.
 - Validacion cruzada Java/Python ejecutada correctamente.
 - Resultado: todos los pares comparados quedan en estado OK con tolerancia `<= 0.01`.
