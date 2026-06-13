@@ -122,7 +122,14 @@ Además se incorporaron **pruebas de integración** que ejercitan el sistema de 
 - `tests/test_integracion_flujo.py`: valida el flujo completo (ingesta, validación, cálculo y alertas) sobre `data/aeronaves_demo.csv`, confirmando 4 aeronaves válidas, 3 registros descartados, 6 pares evaluados, V01-V02 en ROJO y V05-V06 en VERDE.
 - `tests/test_validacion_cruzada.py`: compara `data/resultados_python.csv` y `data/resultados_java.csv` y verifica que todos los pares queden en estado OK con diferencias `<= 0.01`.
 
-Esto responde al enfoque de **pruebas automatizadas y CI/CD** visto en clase: cada cambio queda verificado de forma reproducible antes de integrarse, reduciendo el riesgo de regresiones.
+### Pruebas de sistema y robustez
+
+- **Dataset de estrés sintético inspirado en La Serena.** El script `scripts/generar_dataset_estres.py` genera de forma determinista (semilla fija) el archivo `data/aeronaves_stress_la_serena_200.csv` con **200 aeronaves válidas** en un espacio aéreo regional simplificado (coordenadas locales en NM, rango aproximado -80 a 80), con mezcla realista de altitudes, velocidades, rumbos y tasas verticales. **Es un dataset sintético y académico: no representa tráfico aéreo real ni usa latitud/longitud real.**
+- **Prueba de rendimiento básica.** `tests/test_stress_dataset.py` procesa el flujo completo (ingesta, cálculo y alertas) sobre las 200 aeronaves, verifica que no haya errores, que se generen pares y que el flujo termine en **menos de 5 segundos** (umbral holgado para entorno local/CI).
+- **Dataset de robustez con errores.** `data/aeronaves_robustez_la_serena.csv` separa el caso válido del caso con errores: incluye registros válidos, una altitud negativa, una `vel_h` corrupta y una aeronave bajo 100 ft (RN-05).
+- **Logs categorizados por criticidad.** `registrar_error()` ahora etiqueta cada evento con su nivel: `ERROR` (datos corruptos o altitud negativa), `WARNING` (exclusión por RN-05) e `INFO` (eventos informativos). Formato: `[timestamp] [NIVEL] mensaje`.
+
+**GitHub Actions** ejecuta estas pruebas automatizadas en cada `push`/`pull_request` a `main` (incluida la generación del dataset de estrés antes de `pytest`). Esto responde al enfoque de **pruebas automatizadas y CI/CD** visto en clase: cada cambio queda verificado de forma reproducible antes de integrarse, reduciendo el riesgo de regresiones.
 
 ## Casos de prueba implementados
 

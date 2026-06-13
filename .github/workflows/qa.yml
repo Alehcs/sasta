@@ -30,8 +30,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Ejecutar pruebas unitarias e integracion (pytest)
-        run: pytest
+      - name: Generar dataset de estres sintetico (La Serena)
+        run: python scripts/generar_dataset_estres.py
+
+      - name: Ejecutar pruebas unitarias, integracion y estres (pytest)
+        run: python -m pytest -v
 
       - name: Ejecutar demo por consola
         run: python src/main.py

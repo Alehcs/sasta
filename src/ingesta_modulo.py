@@ -25,14 +25,18 @@ class Aeronave:
     tasa_v: float
 
 
-def registrar_error(ruta_log, mensaje):
-    """Registra un mensaje de error o descarte con timestamp."""
+def registrar_error(ruta_log, mensaje, nivel="ERROR"):
+    """Registra un mensaje con timestamp y nivel de criticidad.
+
+    Niveles usados: ERROR (datos corruptos o altitud negativa),
+    WARNING (exclusion por RN-05) e INFO (eventos informativos).
+    """
     ruta = Path(ruta_log)
     ruta.parent.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().isoformat(timespec="seconds")
 
     with ruta.open("a", encoding="utf-8") as archivo_log:
-        archivo_log.write(f"[{timestamp}] {mensaje}\n")
+        archivo_log.write(f"[{timestamp}] [{nivel}] {mensaje}\n")
 
 
 def cargar_aeronaves_csv(ruta_csv, ruta_log="logs/errores.log"):
@@ -71,7 +75,14 @@ def cargar_aeronaves_csv(ruta_csv, ruta_log="logs/errores.log"):
 
             if aeronave.alt_z < 100:
                 motivo = "RN-05: aeronave excluida por altitud menor a 100 ft"
-                _descartar(registros_descartados, ruta_log, numero_fila, fila, motivo)
+                _descartar(
+                    registros_descartados,
+                    ruta_log,
+                    numero_fila,
+                    fila,
+                    motivo,
+                    nivel="WARNING",
+                )
                 continue
 
             aeronaves_validas.append(aeronave)
@@ -94,9 +105,13 @@ def _validar_campos_obligatorios(fila):
     return None
 
 
-def _descartar(registros_descartados, ruta_log, numero_fila, fila, motivo):
-    """Guarda un registro descartado y registra su motivo en el log."""
+def _descartar(registros_descartados, ruta_log, numero_fila, fila, motivo, nivel="ERROR"):
+    """Guarda un registro descartado y registra su motivo en el log con nivel."""
     registro = {"fila": numero_fila, "motivo": motivo, "datos": dict(fila)}
     registros_descartados.append(registro)
     identificador = fila.get("id", "SIN_ID") if fila else "SIN_ID"
-    registrar_error(ruta_log, f"Fila {numero_fila} ({identificador}) descartada: {motivo}")
+    registrar_error(
+        ruta_log,
+        f"Fila {numero_fila} ({identificador}) descartada: {motivo}",
+        nivel=nivel,
+    )
