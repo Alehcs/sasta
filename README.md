@@ -82,6 +82,16 @@ La validacion cruzada es una evidencia adicional de calidad y no reemplaza la de
 
 Si las diferencias de tiempo, distancia horizontal y distancia vertical estan dentro de tolerancia, el par queda en estado OK. Si alguna diferencia supera la tolerancia, queda en estado REVISAR.
 
+### Requisito de Java
+
+La validacion cruzada Java/Python requiere **Java 17 o superior**. Antes de ejecutarla, verificar la version con:
+
+```powershell
+java -version
+```
+
+Si el comando `java` por defecto apunta a otra version (por ejemplo Java 8) o falla, configurar `JAVA_HOME` hacia un JDK 17 y anteponer `%JAVA_HOME%\bin` al `PATH`.
+
 ```powershell
 python src/exportar_resultados_python.py
 javac java/SastaCalculator.java
