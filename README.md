@@ -105,6 +105,25 @@ Evidencia actual:
 - 6 pares en estado OK.
 - Diferencias observadas: 0.0000 en tiempo, distancia horizontal y distancia vertical para todos los pares.
 
+## Fase 3 - Automatización QA e Integración Continua
+
+Se agrego un flujo de Integración Continua (CI) mediante **GitHub Actions** definido en `.github/workflows/qa.yml`. Las pruebas y validaciones del proyecto se ejecutan **automáticamente** en cada `push` a `main` y en cada `pull_request` hacia `main`, sin intervención manual.
+
+El workflow se ejecuta en `ubuntu-latest`, configura Python 3.12 y Java 17, instala las dependencias desde `requirements.txt` y valida de forma automatizada:
+
+- `pytest`: pruebas unitarias y de integración.
+- Flujo principal por consola (`python src/main.py`).
+- Cálculo cinemático en Python y en Java, con compilación de `java/SastaCalculator.java`.
+- Validación cruzada Java/Python con tolerancia `<= 0.01`.
+- Compilación del dashboard (`python -m py_compile app_streamlit.py`).
+
+Además se incorporaron **pruebas de integración** que ejercitan el sistema de extremo a extremo:
+
+- `tests/test_integracion_flujo.py`: valida el flujo completo (ingesta, validación, cálculo y alertas) sobre `data/aeronaves_demo.csv`, confirmando 4 aeronaves válidas, 3 registros descartados, 6 pares evaluados, V01-V02 en ROJO y V05-V06 en VERDE.
+- `tests/test_validacion_cruzada.py`: compara `data/resultados_python.csv` y `data/resultados_java.csv` y verifica que todos los pares queden en estado OK con diferencias `<= 0.01`.
+
+Esto responde al enfoque de **pruebas automatizadas y CI/CD** visto en clase: cada cambio queda verificado de forma reproducible antes de integrarse, reduciendo el riesgo de regresiones.
+
 ## Casos de prueba implementados
 
 - UT-NORM-01: convergencia frontal inminente => ROJO.

@@ -1,0 +1,52 @@
+name: QA SASTA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ejecutar pruebas unitarias e integracion (pytest)
+        run: pytest
+
+      - name: Ejecutar demo por consola
+        run: python src/main.py
+
+      - name: Exportar resultados cinematicos (Python)
+        run: python src/exportar_resultados_python.py
+
+      - name: Compilar calculador Java
+        run: javac java/SastaCalculator.java
+
+      - name: Ejecutar calculador Java
+        run: java -cp java SastaCalculator
+
+      - name: Validacion cruzada Java/Python
+        run: python src/validador_consistencia_modulo.py
+
+      - name: Verificar compilacion de Streamlit
+        run: python -m py_compile app_streamlit.py
