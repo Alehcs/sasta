@@ -33,8 +33,14 @@ jobs:
       - name: Generar dataset de estres sintetico (La Serena)
         run: python scripts/generar_dataset_estres.py
 
-      - name: Ejecutar pruebas unitarias, integracion y estres (pytest)
-        run: python -m pytest -v
+      - name: Ejecutar linting con Ruff
+        run: python -m ruff check .
+
+      - name: Ejecutar pruebas con cobertura
+        run: python -m pytest -v --cov=src --cov=scripts --cov-report=term-missing --cov-report=xml
+
+      - name: Ejecutar analisis basico de seguridad con Bandit
+        run: python -m bandit -r src scripts app_streamlit.py
 
       - name: Ejecutar demo por consola
         run: python src/main.py
@@ -53,3 +59,6 @@ jobs:
 
       - name: Verificar compilacion de Streamlit
         run: python -m py_compile app_streamlit.py
+
+      - name: Verificar compilacion del script de entrega
+        run: python -m py_compile scripts/verificar_entrega.py

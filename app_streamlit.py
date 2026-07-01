@@ -43,11 +43,14 @@ def main():
 
     st.caption(f"Archivo procesado: {ruta_csv if not usando_temporal else archivo_subido.name}")
     _mostrar_metricas(aeronaves, descartados, resultados_alerta)
+    _mostrar_modo_demo(ruta_csv, usando_temporal, archivo_subido, aeronaves, descartados, resultados_alerta)
+    filtro_alerta = _seleccionar_filtro_alerta()
+    resultados_alerta_filtrados = _filtrar_alertas(resultados_alerta, filtro_alerta)
 
     columna_izquierda, columna_derecha = st.columns([1.05, 0.95], gap="medium")
     with columna_izquierda:
-        _mostrar_tabla_alertas(resultados_alerta)
-        par_seleccionado = _seleccionar_par(resultados_alerta)
+        _mostrar_tabla_alertas(resultados_alerta_filtrados, filtro_alerta)
+        par_seleccionado = _seleccionar_par(resultados_alerta_filtrados)
 
     with columna_derecha:
         _mostrar_radar(aeronaves_por_id, resultados_calculo, resultados_alerta, par_seleccionado)
@@ -164,9 +167,68 @@ def _mostrar_metricas(aeronaves, descartados, resultados_alerta):
     fila_2[2].metric("Alertas VERDES", conteos_alertas["VERDE"])
 
 
-def _mostrar_tabla_alertas(resultados_alerta):
+def _mostrar_modo_demo(
+    ruta_csv,
+    usando_temporal,
+    archivo_subido,
+    aeronaves,
+    descartados,
+    resultados_alerta,
+):
+    """Muestra una guia compacta para ejecutar la demo ante revisores."""
+    dataset = archivo_subido.name if usando_temporal else Path(ruta_csv).name
+    caso_rojo = _describir_caso_principal(resultados_alerta, "V01", "V02")
+    caso_verde = _describir_caso_principal(resultados_alerta, "V05", "V06")
+
+    with st.expander("Modo demo", expanded=True):
+        st.markdown(
+            f"""
+            <div class="sasta-summary">
+            <b>Dataset:</b> {dataset}<br>
+            <b>Aeronaves validas:</b> {len(aeronaves)} &nbsp;|&nbsp;
+            <b>Registros descartados:</b> {len(descartados)} &nbsp;|&nbsp;
+            <b>Pares evaluados:</b> {len(resultados_alerta)}<br>
+            <b>Caso ROJO principal:</b> {caso_rojo} &nbsp;|&nbsp;
+            <b>Caso VERDE principal:</b> {caso_verde}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def _describir_caso_principal(resultados_alerta, id_a, id_b):
+    """Devuelve la alerta observada para un par esperado de la demo."""
+    for resultado in resultados_alerta:
+        if {resultado.id_a, resultado.id_b} == {id_a, id_b}:
+            return f"{id_a}-{id_b}: {resultado.alerta}"
+
+    return f"{id_a}-{id_b}: no disponible"
+
+
+def _seleccionar_filtro_alerta():
+    """Permite filtrar visualmente la tabla y selector por nivel de alerta."""
+    return st.radio(
+        "Filtro de alertas",
+        ["TODAS", "ROJO", "AMARILLO", "VERDE"],
+        horizontal=True,
+    )
+
+
+def _filtrar_alertas(resultados_alerta, filtro_alerta):
+    """Retorna los resultados visibles segun el filtro seleccionado."""
+    if filtro_alerta == "TODAS":
+        return resultados_alerta
+
+    return [
+        resultado
+        for resultado in resultados_alerta
+        if resultado.alerta == filtro_alerta
+    ]
+
+
+def _mostrar_tabla_alertas(resultados_alerta, filtro_alerta):
     """Muestra una tabla coloreada con las alertas calculadas."""
-    st.subheader("Alertas")
+    st.subheader(f"Alertas ({filtro_alerta})")
     filas = []
 
     for resultado in resultados_alerta:
@@ -181,7 +243,7 @@ def _mostrar_tabla_alertas(resultados_alerta):
         )
 
     if not filas:
-        st.info("No hay pares evaluados para mostrar.")
+        st.info("No hay pares evaluados para el filtro seleccionado.")
         return
 
     dataframe = pd.DataFrame(filas)

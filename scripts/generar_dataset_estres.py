@@ -79,7 +79,8 @@ def _posicion(rng):
 
 def generar_dataset_estres(ruta_salida=RUTA_SALIDA, cantidad=200, semilla=SEMILLA):
     """Genera un CSV determinista con aeronaves validas de estres."""
-    rng = random.Random(semilla)
+    # Dataset sintetico determinista; no se usa para criptografia ni seguridad.
+    rng = random.Random(semilla)  # nosec B311
     perfiles = (_perfil_bajo, _perfil_regional, _perfil_ruta)
     pesos = (0.30, 0.40, 0.30)
 

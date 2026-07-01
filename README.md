@@ -131,6 +131,44 @@ Además se incorporaron **pruebas de integración** que ejercitan el sistema de 
 
 **GitHub Actions** ejecuta estas pruebas automatizadas en cada `push`/`pull_request` a `main` (incluida la generación del dataset de estrés antes de `pytest`). Esto responde al enfoque de **pruebas automatizadas y CI/CD** visto en clase: cada cambio queda verificado de forma reproducible antes de integrarse, reduciendo el riesgo de regresiones.
 
+## Fase 4 - Aseguramiento Estático, Cobertura y Seguridad
+
+La Fase 4 agrega controles de calidad estaticos y de seguridad basica sin cambiar las reglas de negocio del sistema SASTA.
+
+- **Linting con Ruff:** `python -m ruff check .` revisa `src/`, `tests/`, `scripts/` y `app_streamlit.py` con reglas base orientadas a errores comunes de Python, sin imponer reglas de estilo excesivamente estrictas.
+- **Cobertura con pytest-cov:** `python -m pytest --cov=src --cov=scripts --cov-report=term-missing --cov-report=xml` ejecuta las pruebas y muestra lineas no cubiertas.
+- **Reporte para SonarQube:** el reporte `coverage.xml` queda configurado para futuras integraciones mediante `sonar-project.properties`, sin requerir SonarQube instalado localmente.
+- **Seguridad basica con Bandit:** `python -m bandit -r src scripts app_streamlit.py` revisa patrones Python riesgosos de forma automatizada.
+- **Rendimiento:** `tests/test_stress_dataset.py` confirma que el dataset sintetico de 200 aeronaves se procesa en menos de 5 segundos.
+- **Bandit B311 documentado:** `scripts/generar_dataset_estres.py` usa `random.Random` con semilla fija solo para generar datos sinteticos reproducibles de prueba. No se usa para criptografia ni seguridad, por lo que se marca como falso positivo razonable con `# nosec B311`.
+
+Comandos principales de Fase 4:
+
+```powershell
+python -m ruff check .
+python -m pytest --cov=src --cov=scripts --cov-report=term-missing --cov-report=xml
+python -m bandit -r src scripts app_streamlit.py
+```
+
+## Fase 5 - Validación de Usuario y Cierre Final
+
+La Fase 5 estabiliza el proyecto para entrega final y concentra la evidencia de aceptacion de usuario, cierre de alcance y verificacion final.
+
+- **Filtros del dashboard:** `app_streamlit.py` permite filtrar visualmente las alertas por `TODAS`, `ROJO`, `AMARILLO` y `VERDE`, manteniendo la tabla y la visualizacion 2D tipo radar sobre los resultados ya calculados.
+- **Modo demo:** el dashboard incluye una seccion compacta con dataset usado, aeronaves validas, registros descartados, pares evaluados, caso ROJO principal (`V01-V02`) y caso VERDE principal (`V05-V06`).
+- **Checklist UAT:** `docs/UAT_CHECKLIST.md` guia la aceptacion manual del revisor: consola, dashboard, casos ROJO/VERDE, descartes, validacion cruzada, pruebas automatizadas y GitHub Actions.
+- **Code freeze:** `docs/CODE_FREEZE.md` define fecha de congelamiento, alcance congelado, comandos finales, reglas de no modificacion y excepciones permitidas.
+- **Informe final de calidad:** `docs/INFORME_FINAL_CALIDAD.md` resume el estado por fases, pruebas, datasets, validacion cruzada, logs, CI/CD, linting, cobertura y seguridad.
+- **Script de verificacion final:** `scripts/verificar_entrega.py` ejecuta el flujo final de QA y prioriza `JAVA_HOME` para evitar runtimes Java antiguos en PATH.
+- **Bandit en el script de entrega:** el uso de `subprocess` queda marcado con `# nosec` porque ejecuta comandos cerrados de QA definidos por el proyecto, no entrada libre de usuario.
+
+Flujo de entrega recomendado:
+
+```powershell
+python scripts/verificar_entrega.py
+streamlit run app_streamlit.py
+```
+
 ## Flujo recomendado de verificación QA
 
 Secuencia completa para verificar el proyecto de punta a punta en un entorno local (la misma lógica que ejecuta GitHub Actions). Requiere Python 3.12+ y Java 17 (ver "Requisito de Java"):
@@ -138,23 +176,30 @@ Secuencia completa para verificar el proyecto de punta a punta en un entorno loc
 ```powershell
 pip install -r requirements.txt
 python scripts/generar_dataset_estres.py
-python -m pytest -v
+python -m ruff check .
+python -m pytest -v --cov=src --cov=scripts --cov-report=term-missing --cov-report=xml
+python -m bandit -r src scripts app_streamlit.py
 python src/main.py
 python src/exportar_resultados_python.py
 javac java/SastaCalculator.java
 java -cp java SastaCalculator
 python src/validador_consistencia_modulo.py
 python -m py_compile app_streamlit.py
+python -m py_compile scripts/verificar_entrega.py
+python scripts/verificar_entrega.py
 streamlit run app_streamlit.py
 ```
 
 Resultado esperado:
 
 - Dataset de estrés `data/aeronaves_stress_la_serena_200.csv` generado (200 aeronaves válidas).
-- `pytest`: 10 pruebas aprobadas (unitarias, integración y estrés).
+- `ruff`: analisis estatico sin hallazgos.
+- `pytest` con cobertura: 10 pruebas aprobadas (unitarias, integración y estrés) y `coverage.xml` generado.
+- `bandit`: analisis basico de seguridad sin hallazgos relevantes; B311 queda documentado como falso positivo razonable para el generador sintetico.
 - Demo por consola: 4 aeronaves válidas, 3 registros descartados, 6 pares evaluados, V01-V02 en ROJO y V05-V06 en VERDE.
 - Validación cruzada Java/Python: todos los pares en estado OK con diferencias `<= 0.01`.
 - `py_compile` del dashboard sin errores y Streamlit levantando correctamente.
+- `scripts/verificar_entrega.py`: flujo final de verificacion ejecutado correctamente.
 
 ## Casos de prueba implementados
 

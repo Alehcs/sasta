@@ -1,5 +1,8 @@
 colorama
 pytest
+pytest-cov
+ruff
+bandit
 streamlit
 pandas
 matplotlib
